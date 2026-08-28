@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "abdul.hotcorners",
+  "name": "Hot Corners",
+  "version": "1.0.0",
+  "author": "Abdul Qabiz",
+  "description": "macOS-style hot corners: rest the pointer in a screen corner to run a command.",
+  "license": "MIT",
+  "kinds": [
+    "service",
+    "overlay"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml",
+    "overlay": "Settings.qml"
+  }
+}
