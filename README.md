@@ -4,7 +4,9 @@ macOS-style hot corners for [Omarchy](https://omarchy.org/). Rest the pointer in
 a corner of the screen for a moment and a command runs — lock the screen, open
 the menu, start the screensaver, or anything else you can type into a shell.
 
-Includes a settings GUI, themed like the rest of the Omarchy shell.
+Includes a settings GUI, themed like the rest of the Omarchy shell, an accent
+glow that grows while a corner arms, and two ways to keep corners from firing
+by accident.
 
 ![The hot corners settings window](preview.png)
 
@@ -127,6 +129,9 @@ corner disabled the first time the plugin runs.
   "dwellMs": 400,
   "cooldownMs": 1500,
   "shortcut": "SUPER + SHIFT + H",
+  "requireSuper": false,
+  "suppressFullscreen": true,
+  "glow": true,
   "corners": {
     "top-left":     { "action": "omarchy system lock" },
     "top-right":    { "action": "" },
@@ -142,6 +147,9 @@ corner disabled the first time the plugin runs.
 | `dwellMs` | How long the pointer must rest in the corner before firing (0–3000). |
 | `cooldownMs` | Ignore re-entry for this long after a corner fires (0–10000). |
 | `shortcut` | Keybinding that opens the GUI, e.g. `SUPER + SHIFT + H`. Empty means none. |
+| `requireSuper` | Corners only fire while Super is held. Off by default. |
+| `suppressFullscreen` | Do not fire while a window is fullscreen. On by default. |
+| `glow` | Show the accent bloom that grows while a corner arms. On by default. |
 | `corners.<corner>.action` | Command to run, via `bash -lc`. Empty disables the corner. |
 
 An empty action collapses that corner to nothing: it takes no pointer input at
@@ -168,13 +176,39 @@ click-through, so the surface is invisible to the rest of your session. A
 `MouseArea` starts the dwell timer on enter and cancels it on exit; the pointer
 must leave the corner before it can fire again.
 
+## Not firing by accident
+
+Two ways to stop a corner going off when you did not mean it, both in the
+GUI's Behaviour section:
+
+**Ignore fullscreen windows** (on by default) — a corner will not fire while a
+window is fullscreen, so parking the pointer during a video is safe. State
+comes from Hyprland's event stream, not a polling loop.
+
+**Hold Super to arm** (off by default) — corners fire only while Super is
+held, which also means dragging a window into an edge cannot trip one. Turning
+it on adds two binds to the managed block in `bindings.lua`:
+
+```lua
+o.bind("Super_L", "Arm hot corners", "omarchy-shell -q hotcorners arm 1", { non_consuming = true })
+o.bind("Super_L", "Disarm hot corners", "omarchy-shell -q hotcorners arm 0", { release = true, non_consuming = true })
+```
+
+`non_consuming` is what keeps `SUPER + <key>` working — without it these binds
+swallow the Super press and every Super shortcut on the system stops firing.
+
+The cost is honest: each Super press and release spawns a short-lived process.
+That is why it is opt-in rather than the default. If you use Super constantly
+and would rather not pay for it, leave it off — the dwell delay alone already
+stops most accidental triggers, since throwing the pointer at a corner and
+clicking is faster than the dwell.
+
 ## Notes and limitations
 
 - **The top corners sit over the bar.** Whatever lands in the trigger square
-  stops reaching the bar, so a top-left corner costs the Omarchy menu button its
-  outermost few pixels. Keep `triggerSize` small, or prefer the bottom corners.
-- **Corners fire over fullscreen windows.** The surface is on the overlay layer,
-  so a corner is live during fullscreen video. Raise `dwellMs` if that bites.
+  stops reaching the bar, so a top-left corner costs the Omarchy menu button
+  its outermost few pixels. Keep `triggerSize` small, prefer the bottom
+  corners, or turn on Hold Super to arm.
 - **Every screen gets its own corners**, at that screen's own edges.
 - **Editing the QML needs `omarchy restart shell`.** The QML engine caches
   plugin components by path, so a plain reload keeps the old version. Config

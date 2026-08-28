@@ -66,6 +66,9 @@ function defaults() {
     dwellMs: LIMITS.dwellMs.def,
     cooldownMs: LIMITS.cooldownMs.def,
     shortcut: "",
+    requireSuper: false,
+    suppressFullscreen: true,
+    glow: true,
     corners: corners
   }
 }
@@ -147,6 +150,11 @@ function parse(text) {
   cfg.dwellMs = clampInt(raw.dwellMs, LIMITS.dwellMs)
   cfg.cooldownMs = clampInt(raw.cooldownMs, LIMITS.cooldownMs)
   cfg.shortcut = sanitizeShortcut(raw.shortcut)
+  // Opt-in: arming needs two extra Hyprland binds, so it stays off until asked.
+  cfg.requireSuper = raw.requireSuper === true
+  // Default-on: these correct annoyances rather than change what a corner does.
+  cfg.suppressFullscreen = raw.suppressFullscreen !== false
+  cfg.glow = raw.glow !== false
 
   var corners = raw.corners && typeof raw.corners === "object" ? raw.corners : {}
   for (var i = 0; i < CORNERS.length; i++) {

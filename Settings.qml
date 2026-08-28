@@ -76,21 +76,31 @@ Item {
   }
 
   function save() {
-    var previous = Config.parse(configFile.text()).shortcut
+    var previous = Config.parse(configFile.text())
     configFile.setText(Config.serialize(root.working))
-    // Only touch the user's Hyprland config when the shortcut actually
-    // changed, so an ordinary Save never rewrites bindings.lua.
-    if (root.working.shortcut !== previous) root.applyShortcut(root.working.shortcut)
+    // Only touch the user's Hyprland config when something that lives there
+    // actually changed, so an ordinary Save never rewrites bindings.lua.
+    if (root.working.shortcut !== previous.shortcut
+        || root.working.requireSuper !== previous.requireSuper) {
+      root.applyBindings(root.working.shortcut, root.working.requireSuper)
+    }
     root.close()
   }
 
-  function applyShortcut(shortcut) {
+  function applyBindings(shortcut, requireSuper) {
     var dir = root.manifest && root.manifest.__sourceDir ? String(root.manifest.__sourceDir) : ""
     if (dir === "") {
-      console.warn("hotcorners: no plugin source dir, cannot apply keybinding")
+      console.warn("hotcorners: no plugin source dir, cannot apply keybindings")
       return
     }
-    Quickshell.execDetached(["bash", dir + "/bin/apply-binding.sh", String(shortcut || "")])
+    Quickshell.execDetached(["bash", dir + "/bin/apply-binding.sh",
+      String(shortcut || ""), requireSuper ? "super" : ""])
+  }
+
+  function setFlag(key, value) {
+    var next = Config.clone(root.working)
+    next[key] = value === true
+    root.working = next
   }
 
   function setShortcut(value) {
@@ -154,7 +164,7 @@ Item {
       cfg.shortcut = clean
       configFile.setText(Config.serialize(cfg))
       if (root.opened) root.working = Config.clone(cfg)
-      root.applyShortcut(clean)
+      root.applyBindings(clean, cfg.requireSuper)
       return clean === "" ? "cleared" : clean
     }
   }
@@ -496,6 +506,52 @@ Item {
               font.family: root.fontFamily
               font.pixelSize: Style.font.caption
               wrapMode: Text.WordWrap
+            }
+          }
+
+          // ------------------------------------------------- behaviour
+          Column {
+            width: parent.width
+            spacing: Style.spacing.md
+
+            PanelSectionHeader {
+              text: "Behaviour"
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+            }
+
+            Toggle {
+              width: parent.width
+              label: "Hold Super to arm"
+              description: "Corners only fire while Super is held, so dragging a window "
+                + "to an edge cannot trip them. Adds two binds to bindings.lua."
+              checked: root.working.requireSuper
+              foreground: root.foreground
+              accent: root.accent
+              fontFamily: root.fontFamily
+              onClicked: root.setFlag("requireSuper", !root.working.requireSuper)
+            }
+
+            Toggle {
+              width: parent.width
+              label: "Ignore fullscreen windows"
+              description: "Do not fire while a window is fullscreen."
+              checked: root.working.suppressFullscreen
+              foreground: root.foreground
+              accent: root.accent
+              fontFamily: root.fontFamily
+              onClicked: root.setFlag("suppressFullscreen", !root.working.suppressFullscreen)
+            }
+
+            Toggle {
+              width: parent.width
+              label: "Show the dwell glow"
+              description: "An accent bloom grows in the corner while it arms."
+              checked: root.working.glow
+              foreground: root.foreground
+              accent: root.accent
+              fontFamily: root.fontFamily
+              onClicked: root.setFlag("glow", !root.working.glow)
             }
           }
 
