@@ -201,6 +201,7 @@ Item {
         font.bold: true
       }
       Text {
+        textFormat: Text.PlainText
         width: parent.width
         text: root.summaryFor(tile.corner)
         color: tile.assigned ? root.foreground : Qt.darker(root.foreground, 1.8)

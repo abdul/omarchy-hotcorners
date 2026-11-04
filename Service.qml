@@ -67,7 +67,13 @@ Item {
     }
   }
 
-  Component.onCompleted: fullscreenProbe.running = true
+  Component.onCompleted: {
+    fullscreenProbe.running = true
+    Quickshell.execDetached([
+      Quickshell.env("HOME") + "/.config/omarchy/plugins/abdul.hotcorners/bin/stay-awake.sh",
+      "recover"
+    ])
+  }
 
   // ---------------------------------------------------------- actions
 
@@ -78,10 +84,16 @@ Item {
 
   function fire(action) {
     if (!action) return
+    if (action === Config.STAY_AWAKE) return
     var now = Date.now()
     if (now - root.lastFiredAt < root.config.cooldownMs) return
     root.lastFiredAt = now
     Quickshell.execDetached(["bash", "-lc", action])
+  }
+
+  function setCornerStayAwake(entering) {
+    var script = Quickshell.env("HOME") + "/.config/omarchy/plugins/abdul.hotcorners/bin/stay-awake.sh"
+    Quickshell.execDetached([script, entering ? "enter" : "leave"])
   }
 
   // Write the defaults out once so the file is there to hand-edit and the
@@ -166,6 +178,7 @@ Item {
     // 0 while idle, ramping to 1 over the dwell time. Drives both the glow
     // and the trigger, so what you see is exactly how close it is to firing.
     property real progress: 0
+    property bool stayAwakeActive: false
 
     readonly property string rect: Math.round(x) + "," + Math.round(y) + " " + width + "x" + height
 
@@ -176,12 +189,23 @@ Item {
       from: 0
       to: 1
       duration: Math.max(1, root.config.dwellMs)
-      onFinished: root.fire(corner.action)
+      onFinished: {
+        if (corner.action === Config.STAY_AWAKE) {
+          root.setCornerStayAwake(true)
+          corner.stayAwakeActive = true
+        } else {
+          root.fire(corner.action)
+        }
+      }
     }
 
     function cancel() {
       dwell.stop()
       corner.progress = 0
+      if (corner.stayAwakeActive) {
+        corner.stayAwakeActive = false
+        root.setCornerStayAwake(false)
+      }
     }
 
     // Suppression that arrives mid-dwell disarms the corner immediately.
