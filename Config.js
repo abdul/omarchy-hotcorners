@@ -17,6 +17,7 @@ var CORNER_LABELS = {
 
 // Sentinel for the free-text option in the preset dropdown. Never stored.
 var CUSTOM = "__custom__"
+var STAY_AWAKE = "__stay_awake_corner__"
 
 // Presets offered by the GUI. Every command here is a real Omarchy command;
 // "" is the disabled state.
@@ -26,6 +27,7 @@ var PRESETS = [
   // The macOS hot corner actions, mapped to their Omarchy equivalents.
   { label: "Lock screen", value: "omarchy system lock" },
   { label: "Start screen saver", value: "omarchy launch screensaver" },
+  { label: "Stay awake", value: STAY_AWAKE },
   { label: "Put display to sleep", value: "hyprctl dispatch 'hl.dsp.dpms(\"off\")'" },
   { label: "Notification centre", value: "omarchy-shell notifications showHistory" },
   { label: "Launchpad (apps menu)", value: "omarchy menu toggle apps" },
@@ -163,6 +165,9 @@ function parse(text) {
     var action = ""
     if (typeof entry === "string") action = entry
     else if (entry && typeof entry.action === "string") action = entry.action
+    // Migrate the first version of the Stay awake preset to its enter/leave
+    // behavior without requiring users to reconfigure their corner.
+    if (action.trim() === "omarchy toggle idle stay-awake") action = STAY_AWAKE
     cfg.corners[key] = { action: action.trim() }
   }
   return cfg

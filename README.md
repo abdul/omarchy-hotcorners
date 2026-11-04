@@ -78,6 +78,7 @@ equivalents:
 |-------|------|
 | Lock Screen | `omarchy system lock` |
 | Start Screen Saver | `omarchy launch screensaver` |
+| Stay awake | Suppress idle behavior while the pointer rests in that corner |
 | Put Display to Sleep | `hyprctl dispatch 'hl.dsp.dpms("off")'` |
 | Notification Center | `omarchy-shell notifications showHistory` |
 | Launchpad | `omarchy menu toggle apps` |
@@ -89,7 +90,10 @@ equivalents:
 Plus what Omarchy and Hyprland offer that macOS does not have a corner for:
 next / previous / last-used workspace, toggle the scratchpad, cycle windows,
 the Omarchy and system menus, clipboard history, the emoji picker, a region
-screenshot, and night light. Anything else goes in the free-text field.
+screenshot, night light, and Stay awake. After its dwell delay, Stay awake
+suppresses both the idle screensaver and idle lock while the pointer remains
+in that corner, then restores the previous idle state when the pointer leaves.
+Anything else goes in the free-text field.
 
 **Mission Control has no equivalent.** Hyprland ships no window overview;
 `hyprexpo` and `hyprtasking` are out-of-tree plugins it does not load by
